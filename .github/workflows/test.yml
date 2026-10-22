@@ -1,0 +1,24 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: root
+            base-path: /
+          - name: github-pages
+            base-path: /gynecologist/
+    name: Build and test (${{ matrix.name }})
+    uses: ./.github/workflows/build-test.yml
+    with:
+      base-path: ${{ matrix.base-path }}

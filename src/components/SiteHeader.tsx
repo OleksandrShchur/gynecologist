@@ -40,6 +40,18 @@ export function SiteHeader() {
       .map((href) => document.getElementById(href.slice(1)))
       .filter((section): section is HTMLElement => section !== null)
     const visibleSections = new Set<HTMLElement>()
+    let footerVisible = false
+    const updateActiveSection = () => {
+      const visible = sections.filter((section) => visibleSections.has(section))
+      // Short final sections cannot always reach the observation band. At the
+      // footer, keep an explicit visible destination or select the last section.
+      const current = footerVisible
+        ? sections.find((section) => `#${section.id}` === window.location.hash && section.getBoundingClientRect().top >= -1) ?? sections.at(-1)
+        // Compact sections can share the band. Prefer the first heading still
+        // below the top edge before advancing to a later section.
+        : visible.find((section) => section.getBoundingClientRect().top >= -1) ?? visible.at(-1)
+      setActiveHref(current ? `#${current.id}` : null)
+    }
     let observer: IntersectionObserver | undefined
     const observeSections = () => {
       observer?.disconnect()
@@ -50,19 +62,24 @@ export function SiteHeader() {
           if (entry.isIntersecting) visibleSections.add(section)
           else visibleSections.delete(section)
         }
-        const visible = sections.filter((section) => visibleSections.has(section))
-        // Compact sections can share the observation band. Prefer the first
-        // heading still below the top edge before advancing to a later section.
-        const current = visible.find((section) => section.getBoundingClientRect().top >= -1) ?? visible.at(-1)
-        setActiveHref(current ? `#${current.id}` : null)
+        updateActiveSection()
       }, { rootMargin: `0px 0px -${Math.round(window.innerHeight * 0.55)}px 0px`, threshold: 0 })
       sections.forEach((section) => observer?.observe(section))
     }
+    const footer = document.querySelector('footer')
+    const footerObserver = new IntersectionObserver(([entry]) => {
+      footerVisible = Boolean(entry?.isIntersecting && entry.intersectionRatio === 1)
+      updateActiveSection()
+    }, { rootMargin: '0px 0px 2px 0px', threshold: 1 })
+    if (footer) footerObserver.observe(footer)
     observeSections()
     window.addEventListener('resize', observeSections)
+    window.addEventListener('hashchange', updateActiveSection)
     return () => {
       observer?.disconnect()
+      footerObserver.disconnect()
       window.removeEventListener('resize', observeSections)
+      window.removeEventListener('hashchange', updateActiveSection)
     }
   }, [])
 
