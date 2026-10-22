@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.tools/
+.qa/
+.vite-ssr/
+.netlify/
+.vercel/
+*.local
+*.log
+src/assets/generated/
+src/content/images.generated.ts
+src/content/story.generated.ts

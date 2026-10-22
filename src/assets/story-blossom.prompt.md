@@ -1,0 +1,9 @@
+# Original glass blossom
+
+Generation mode: built-in `image_gen`, transparent background. No API keys or external image assets.
+
+Final prompt, verbatim:
+
+> Use case: stylized-concept. Asset type: transparent hero ornament for a premium light-theme Ukrainian private gynecologist website. Create ONE exquisite sculptural three-dimensional translucent glass blossom suspended in air. The flower is an original organic abstract bloom, asymmetrical three-quarter frontal view, about 22 long curved layered petals unfolding into a rounded airy silhouette. Pale lavender and pearlescent ivory glass, delicate lilac edges and subtle warm blush luminous center, strong optical volume from interleaving curled petals and fine silky filaments/veins inside the glass. Each petal has organic wavy tips, delicate detailed mesh-like striations, refractive highlights, soft subsurface transmission. Render as a sophisticated photorealistic CGI glass sculpture, not flat vector, not icon, not a regular geometric rosette. Soft directional studio daylight from upper left, clean rim highlights and enough midtone lilac structure to remain visible on a warm white #FBF8F4 website. Main blossom centered, entire silhouette contained with comfortable 8% transparent margins. No stems, no leaves, no pot, no scene, no floor, no drop shadow, no background, no border, no text, no logos or watermark. Actual transparent alpha background. Square canvas, high detail. User reference is the aesthetic of the centered ethereal translucent blossom on 3D Story on motionsites.ai; create an original different blossom in light colors, do not reproduce any website UI.
+
+Tool options: `transparent_background: true`; no reference-image inputs. `story-blossom.png` is the original generated PNG, copied unchanged. Responsive WebP derivatives preserve its alpha channel and proportions without cropping or enlargement. The ornament is decorative; photographs of the doctor remain the original supplied images.
