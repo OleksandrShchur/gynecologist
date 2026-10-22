@@ -1,4 +1,4 @@
-name: Tests
+name: Build and test
 
 on:
   push:
@@ -9,9 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+  build-test:
     strategy:
       fail-fast: false
       matrix:
@@ -20,35 +18,7 @@ jobs:
             base-path: /
           - name: github-pages
             base-path: /gynecologist/
-    env:
-      VITE_BASE_PATH: ${{ matrix.base-path }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install test browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Build and test production site
-        run: npm test
-
-      - name: Upload test reports
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-${{ matrix.name }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
+    name: Build and test (${{ matrix.name }})
+    uses: ./.github/workflows/build-test.yml
+    with:
+      base-path: ${{ matrix.base-path }}

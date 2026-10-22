@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: read
-  pages: read
 
 # All branches publish to the same site. Let an active deployment finish.
 concurrency:
@@ -14,10 +13,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  prepare:
     if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      pages: read
+    outputs:
+      base-path: ${{ steps.artifact.outputs.base-path }}
+      artifact-name: ${{ steps.artifact.outputs.artifact-name }}
+      reused: ${{ steps.stage.outputs.artifact-id != '' }}
     steps:
       - name: Check out selected branch
         uses: actions/checkout@v7
@@ -28,27 +35,56 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '22'
-          cache: npm
 
       - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v6
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build site
-        run: npm run build
+      - name: Find a successful build and test run for this commit
+        id: artifact
+        run: node .github/scripts/validated-build.mjs find
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
 
-      - name: Upload built site
-        uses: actions/upload-pages-artifact@v5
+      - name: Restore previously validated production files
+        if: steps.artifact.outputs.source-artifact-id != ''
+        id: restore
+        continue-on-error: true
+        uses: actions/download-artifact@v5
         with:
-          path: dist
+          artifact-ids: ${{ steps.artifact.outputs.source-artifact-id }}
+          run-id: ${{ steps.artifact.outputs.source-run-id }}
+          github-token: ${{ github.token }}
+          path: dist/
+          merge-multiple: true
+
+      - name: Stage validated production files in this run
+        if: steps.restore.outcome == 'success'
+        id: stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.artifact-name }}
+          path: dist/
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
+
+      - name: Explain restore fallback
+        if: steps.restore.outcome == 'failure'
+        run: echo 'The previous artifact could not be restored. A fresh build and test run is required.' >> "$GITHUB_STEP_SUMMARY"
+
+  build-test:
+    needs: prepare
+    if: needs.prepare.outputs.reused != 'true'
+    uses: ./.github/workflows/build-test.yml
+    with:
+      base-path: ${{ needs.prepare.outputs.base-path }}
 
   deploy:
-    needs: build
+    needs: [prepare, build-test]
+    # A reused artifact deliberately skips build-test; failed checks still block deployment.
+    if: ${{ always() && !cancelled() && needs.prepare.result == 'success' && (needs.prepare.outputs.reused == 'true' || needs.build-test.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -58,6 +94,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download validated production files
+        uses: actions/download-artifact@v5
+        with:
+          name: ${{ needs.build-test.outputs.artifact-name || needs.prepare.outputs.artifact-name }}
+          path: dist/
+
+      - name: Package validated site for GitHub Pages
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
