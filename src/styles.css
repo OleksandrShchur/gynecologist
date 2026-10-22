@@ -89,6 +89,7 @@ section { scroll-margin-top: 32px; }
 .mobile-navigation { position: relative; }
 .mobile-navigation summary { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; list-style: none; cursor: pointer; border: 1px solid rgb(255 255 255 / 90%); border-radius: var(--radius-control); color: var(--deep-plum); background: linear-gradient(145deg, rgb(255 253 250 / 86%), rgb(243 235 248 / 66%)); box-shadow: inset 0 1px 1px white, inset 0 -1px 2px rgb(61 42 92 / 10%), 0 6px 18px -12px rgb(61 42 92 / 35%); touch-action: manipulation; }
 .mobile-navigation summary::-webkit-details-marker { display: none; }
+.mobile-navigation summary svg { pointer-events: none; }
 .mobile-navigation .menu-close-icon, .mobile-navigation[open] .menu-open-icon { display: none; }
 .mobile-navigation[open] .menu-close-icon { display: block; }
 .mobile-navigation nav { position: absolute; top: calc(100% + 12px); right: 0; display: flex; flex-direction: column; width: 224px; padding: 8px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); box-shadow: 0 16px 40px -16px rgb(61 42 92 / 30%); }
@@ -325,7 +326,7 @@ html[data-scrolling] .information-glass[data-glass]:not(.action-glass) { backgro
 .experience-number { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 40px; color: var(--violet); }
 
 .contact-section { padding-bottom: 0; }
-.hero, .site-header, main { overflow-x: clip; }
+.hero, main { overflow-x: clip; }
 .contact-panel {
   position: relative;
   display: grid;
