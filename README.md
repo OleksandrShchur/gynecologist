@@ -112,6 +112,21 @@ Lighthouse працює в настільному Chrome з емуляцією �
 
 Готовий результат збірки — папка `dist/`. Серверна частина або змінні середовища не потрібні. Файли конфігурації Vercel та Netlify вже додано.
 
+**GitHub Pages:** ручне розгортання налаштовано у [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml).
+
+1. Додайте workflow та зміни збірки до `master` (або іншої default-гілки репозиторію), щоб у GitHub з'явилася кнопка **Run workflow**. Feature-гілка для розгортання також має містити ці зміни.
+2. У **Settings → Pages → Build and deployment → Source** виберіть **GitHub Actions**.
+3. У **Settings → Environments → github-pages → Deployment branches and tags** дозвольте розгортання з `master` та потрібних feature-гілок. Обмеження лише default-гілкою блокуватиме feature-гілки.
+4. Відкрийте **Actions → Deploy to GitHub Pages → Run workflow**, виберіть `master` або feature-гілку в полі **Branch** і запустіть workflow.
+
+Workflow встановлює залежності через `npm ci` на Node.js 22 та запускає `npm run build`, включно з перевіркою TypeScript і prerender. Публікація `dist/` виконується лише після успішної збірки. Push і pull request не запускають розгортання. Додаткові secrets не потрібні: використовується вбудований `GITHUB_TOKEN`.
+
+Усі вибрані гілки публікуються на **один сайт GitHub Pages**: успішне розгортання feature-гілки замінює поточну опубліковану версію. Одночасно виконується лише один workflow розгортання; поточний запуск не скасовується.
+
+Workflow отримує базовий шлях від GitHub Pages і передає його як `VITE_BASE_PATH` під час збірки, тому ресурси та статичні зображення працюють і за адресою `/gynecologist/`, і в корені власного домену. Локально та на інших хостингах базовий шлях за замовчуванням — `/`.
+
+Налаштування та ручний запуск описані в документації GitHub: [custom workflows для Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages), [ручний запуск workflow](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
+
 **Vercel:** імпортуйте репозиторій як Vite-проєкт, виберіть Node.js 22, команду збірки `npm run build` та вихідну папку `dist`. Налаштування також записані у [`vercel.json`](vercel.json).
 
 **Netlify:** імпортуйте репозиторій; [`netlify.toml`](netlify.toml) задає Node.js 22, команду `npm run build` і публікацію `dist`. Для ручного завантаження спочатку зберіть проєкт локально та завантажте вміст `dist`.
