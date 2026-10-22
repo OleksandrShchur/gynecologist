@@ -20,7 +20,7 @@ const accessibilityTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa
 const viewportCases = [
   { name: 'desktop', width: 1440, height: 1000 },
   { name: 'wide-desktop', width: 1920, height: 1080 },
-  { name: 'mobile', width: 375, height: 812 },
+  { name: 'mobile', width: 375, height: 812, touch: true },
   { name: 'small-mobile', width: 320, height: 740 },
   { name: 'tablet', width: 768, height: 1024, touch: true },
   { name: 'compact-tablet', width: 728, height: 486 },
@@ -597,6 +597,29 @@ async function assertMobileNavigation(page) {
   assert.equal(await menu.evaluate((element) => element.open), false, 'The mobile menu must start closed')
   const closedHeight = await page.locator('.site-header').evaluate((element) => element.getBoundingClientRect().height)
 
+  await toggle.tap()
+  await page.waitForFunction(() => document.querySelector('details.mobile-navigation')?.open)
+  for (const link of await links.all()) {
+    const receivesTouch = await link.evaluate((element) => {
+      const bounds = element.getBoundingClientRect()
+      return element.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2))
+    })
+    assert.equal(receivesTouch, true, 'Open menu links must receive touches without being clipped by the header')
+  }
+  await toggle.tap()
+  await page.waitForFunction(() => !document.querySelector('details.mobile-navigation')?.open)
+  await toggle.tap()
+  await page.waitForFunction(() => document.querySelector('details.mobile-navigation')?.open)
+  const touchHref = await links.last().getAttribute('href')
+  await links.last().tap()
+  await page.waitForFunction((hash) => location.hash === hash && !document.querySelector('details.mobile-navigation')?.open, touchHref)
+  await page.goto(baseUrl, { waitUntil: 'networkidle' })
+  await waitForScrollSettled(page)
+  await toggle.tap()
+  await page.waitForFunction(() => document.querySelector('details.mobile-navigation')?.open)
+  await page.touchscreen.tap(8, closedHeight + 20)
+  await page.waitForFunction(() => !document.querySelector('details.mobile-navigation')?.open)
+
   await page.keyboard.press('Tab')
   await toggle.focus()
   // Let native focus scrolling settle before measuring the open menu.
@@ -643,7 +666,7 @@ async function assertMobileNavigation(page) {
   assert.ok(destination && destination.y >= -1 && destination.y < page.viewportSize().height, 'Keyboard activation must reach the selected section after closing the menu')
   await page.waitForFunction((href) => [...document.querySelectorAll('.mobile-navigation nav a')].find((element) => element.getAttribute('href') === href)?.getAttribute('aria-current') === 'location', href, { timeout: 5000 })
   assert.equal(await firstLink.getAttribute('aria-current'), 'location', 'The mobile navigation must identify the selected section after scrolling')
-  return { closedHeight, openHeight, keyboardToggle: true, escapeFocus: true, href, destinationTop: destination.y, scroll, ariaCurrent: await firstLink.getAttribute('aria-current') }
+  return { closedHeight, openHeight, touchToggle: true, touchHref, outsideTapDismissal: true, keyboardToggle: true, escapeFocus: true, href, destinationTop: destination.y, scroll, ariaCurrent: await firstLink.getAttribute('aria-current') }
 }
 
 async function assertContactReadability(page, name) {

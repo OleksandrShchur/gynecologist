@@ -93,7 +93,14 @@ export function SiteHeader() {
         </a>
       </Glass>
       <details ref={mobileMenu} className="mobile-navigation">
-        <summary aria-label={site.labels.menu}>
+        <summary
+          aria-label={site.labels.menu}
+          onClick={(event) => {
+            event.preventDefault()
+            const menu = mobileMenu.current
+            if (menu) menu.open = !menu.open
+          }}
+        >
           <Menu className="menu-open-icon" size={20} strokeWidth={1.5} aria-hidden="true" />
           <X className="menu-close-icon" size={20} strokeWidth={1.5} aria-hidden="true" />
         </summary>
